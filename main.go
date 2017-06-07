@@ -13,6 +13,8 @@ func main() {
 	router := httprouter.New()
 	views.LoadTemplates()
 	router.GET("/", views.Index)
-	router.ServeFiles("/static/*filepath", http.Dir("./static"))
+	router.GET("/:shorturl", views.HandleUrl)
+	// This sidesteps the core rules of httprouter, but this is only for a dev env so eh
+	router.NotFound = http.FileServer(http.Dir("./static"))
 	log.Fatal(http.ListenAndServe(PORT, router))
 }
