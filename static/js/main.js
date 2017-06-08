@@ -7,15 +7,28 @@ function shortenUrl() {
     var xhr = new XMLHttpRequest();
 
     if(urldata != "") { 
+        toggleSpinner();
         xhr.open("POST","/shorten");
         xhr.send(JSON.stringify({
             url: urldata,
         }));
         xhr.onreadystatechange = function() {
             if(xhr.readyState === 4) {
+                toggleSpinner();
                 getShortUrl(xhr);
             }
-            
+        }
+    }
+}
+
+function toggleSpinner() {
+    var element = document.getElementById('spinner-main')
+    if(element) {
+        var display = element.style.display;
+        if(display === "none") {
+            element.style.display = "inline-block";
+        } else {
+            element.style.display = "none";
         }
     }
 }
