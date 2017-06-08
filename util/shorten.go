@@ -2,13 +2,16 @@ package util
 
 import (
 	"bytes"
+	"math"
+	"strings"
 )
 
 const alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const alphaLen = len(alpha)
 
 func ShortenURL(url string) string {
 	// Do Redis stuff and get ID
-	var urlID = 1768
+	var urlID = 126781289
 	return Encode(urlID)
 }
 
@@ -25,11 +28,20 @@ func Encode(id int) string {
 	}
 
 	var hashCount = len(hashDigits)
-	i := 0
-	for hashCount > i {
+	for i := 0; hashCount > i; i++ {
 		hashBuf.WriteByte(alpha[hashDigits[i]])
-		i++
 	}
 
 	return hashBuf.String()
+}
+
+// Decode decodes short url to id
+func Decode(url string) int {
+	result := 0
+	shortUrlLen := len(url)
+	for i := 0; i < shortUrlLen; i++ {
+		x := strings.IndexByte(alpha, url[i])
+		result += x * int(math.Pow(float64(alphaLen), float64(shortUrlLen-i-1)))
+	}
+	return result
 }
