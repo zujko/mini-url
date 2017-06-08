@@ -34,13 +34,14 @@ func HandleUrl(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func Shorten(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var url URLRsp
 	json.NewDecoder(r.Body).Decode(&url)
-	fmt.Println(url.Data)
-	var resp = &ShortURL{"testdata.com"}
+	var resp = &ShortURL{""}
 	// Get Short url
 	if !util.IsURL(url.Data) {
 		resp = &ShortURL{"invalid"}
+	} else {
+		result := util.ShortenURL(url.Data)
+		resp = &ShortURL{result}
 	}
-
 	json.NewEncoder(w).Encode(resp)
 }
 
