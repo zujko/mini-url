@@ -1,28 +1,47 @@
 package views
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/zujko/mini-url/util"
 )
 
 var indexTemplate *template.Template
 var footerTemplate *template.Template
 
+type URLRsp struct {
+	Data string `json:"url"`
+}
+
+type ShortURL struct {
+	Data string `json:"data"`
+}
+
 // Handles Index page
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	if r.Method == "GET" {
-		indexTemplate.Execute(w, nil)
-	}
+	indexTemplate.Execute(w, nil)
 }
 
 func HandleUrl(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if r.Method == "GET" {
-		shortUrl := ps.ByName("shorturl")
-		fmt.Println(shortUrl)
+	shortUrl := ps.ByName("shorturl")
+	fmt.Println(shortUrl)
+}
+
+func Shorten(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var url URLRsp
+	json.NewDecoder(r.Body).Decode(&url)
+	fmt.Println(url.Data)
+	var resp = &ShortURL{"testdata.com"}
+	// Get Short url
+	if !util.IsURL(url.Data) {
+		resp = &ShortURL{"invalid"}
 	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func LoadTemplates() {

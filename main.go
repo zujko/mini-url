@@ -14,6 +14,7 @@ func main() {
 	views.LoadTemplates()
 	router.GET("/", views.Index)
 	router.GET("/:shorturl", views.HandleUrl)
+	router.POST("/shorten", views.Shorten)
 	// This sidesteps the core rules of httprouter, but this is only for a dev env so eh
 	router.NotFound = http.FileServer(http.Dir("./static"))
 	log.Fatal(http.ListenAndServe(PORT, router))
