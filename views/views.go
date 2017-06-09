@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/zujko/mini-url/db"
 	"github.com/zujko/mini-url/util"
 )
 
@@ -28,7 +30,21 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 func HandleUrl(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	shortUrl := ps.ByName("shorturl")
-	fmt.Println(shortUrl)
+	fmt.Println("Handling URL", shortUrl)
+	redis, err := db.RedisPool.Get()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resp, err := redis.Cmd("GET", fmt.Sprintf("url:%s", shortUrl)).Str()
+	db.RedisPool.Put(redis)
+	if err != nil {
+		fmt.Println("This URL does not exist")
+		return
+	}
+	path := "https://www." + resp
+	fmt.Println("redirecting")
+	http.Redirect(w, r, path, http.StatusMovedPermanently)
 }
 
 func Shorten(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
