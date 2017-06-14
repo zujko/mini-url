@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/url"
 	"strings"
 
 	"github.com/zujko/mini-url/db"
@@ -47,7 +48,7 @@ func Exists(url string) (bool, string) {
 	}
 	// Check if it exists
 	response := redis.Cmd("EXISTS", url)
-
+	// Grab response as an int
 	respVal, err := response.Int()
 	if err != nil {
 		log.Fatal(err)
@@ -68,6 +69,12 @@ func Exists(url string) (bool, string) {
 }
 
 func StoreURL(shortURL string, longURL string) {
+	// Check if the URL is absolute or not
+	url, _ := url.Parse(longURL)
+	if !url.IsAbs() {
+		longURL = "https://" + longURL
+	}
+
 	redis, err := db.RedisPool.Get()
 	if err != nil {
 		log.Fatal(err)

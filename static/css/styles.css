@@ -81,3 +81,7 @@ body {
     width: 700px;
   }
 }
+
+tr:hover, tr.hover, tr.matching {
+    background: #585955;
+}

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -11,9 +12,10 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <link href="css/styles.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-  
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="js/notify.min.js"></script>
 </head>
+
 <body>
   <div class="site-wrapper">
     <div class="site-wrapper-inner">
@@ -34,9 +36,20 @@
             <i id="spinner-main" style="display: none" class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
           </div>
         </div>
+        <table id="url-table" class="table">
+          <thead>
+            <tr>
+              <th>Original URL</th>
+              <th>Short URL</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
   <script src="js/main.js"></script>
 </body>
+
 </html>
