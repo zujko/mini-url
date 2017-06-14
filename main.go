@@ -3,9 +3,11 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/mediocregopher/radix.v2/pool"
+	"github.com/mediocregopher/radix.v2/redis"
 	"github.com/zujko/mini-url/db"
 	"github.com/zujko/mini-url/views"
 )
@@ -13,7 +15,19 @@ import (
 func main() {
 	var err error
 	PORT := ":8080"
-	db.RedisPool, err = pool.New("tcp", "localhost:6379", 10)
+	df := func(network, addr string) (*redis.Client, error) {
+		client, err := redis.Dial(network, addr)
+		if err != nil {
+			return nil, err
+		}
+		if err = client.Cmd("AUTH", os.Getenv("REDISKEY")).Err; err != nil {
+			client.Close()
+			return nil, err
+		}
+		return client, nil
+	}
+
+	db.RedisPool, err = pool.NewCustom("tcp", "localhost:6379", 10, df)
 	if err != nil {
 		log.Fatal(err)
 	}
