@@ -69,11 +69,16 @@ function getShortUrl(xhrReq) {
  * @param {*} data 
  */
 function displayUrl(data) {
+    // First make sure the table is visible
+    var table = document.getElementById('url-table');
+    if(table.style.display == "none") {
+        table.style.display = "table";
+    }
     var tableRef = document.getElementById('url-table').getElementsByTagName('tbody')[0];
 
     // Insert a row in the table at the last row
     var newRow   = tableRef.insertRow(tableRef.rows.length);
     // Insert a cell in the row at index 0
     newRow.insertCell(0).innerHTML = data.longUrl;
-    newRow.insertCell(1).innerHTML = data.shortUrl;
+    newRow.insertCell(1).innerHTML = window.location.host+"/"+data.shortUrl;
 }

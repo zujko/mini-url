@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mini-url-deployment
+spec:
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        app: mini-url-1
+    spec:
+      containers:
+      - name: mini-url
+        image: gcr.io/mini-url-170719/mini-url
+        ports:
+        - containerPort: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mini-url-service
+spec:
+  selector:
+    app: mini-url-1
+  ports:
+    - protocol: TCP
+      port: 8080
+  type: LoadBalancer

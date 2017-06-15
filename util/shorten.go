@@ -38,34 +38,23 @@ func ShortenURL(url string) string {
 
 // Exists checks if the URL already exists
 // If it does, just use the already shortened URL
-func Exists(url string) (bool, string) {
+func Exists(longURL string) (bool, string) {
 	// Grab connection from pool
+	urlObj, _ := url.Parse(longURL)
+	if !urlObj.IsAbs() {
+		longURL = "https://" + longURL
+	}
 	redis, err := db.RedisPool.Get()
 	defer db.RedisPool.Put(redis)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Check if it exists
-	response := redis.Cmd("EXISTS", url)
-	// Grab response as an int
-	respVal, err := response.Int()
+	response, err := redis.Cmd("GET", longURL).Str()
 	if err != nil {
-		log.Fatal(err)
+		return false, ""
 	}
-	if response.Err != nil {
-		log.Fatal(response.Err)
-	}
-	// If it exists, return the shortened link
-	if respVal == 1 {
-		response, err := redis.Cmd("GET", fmt.Sprintf("%s", url)).Str()
-		if err != nil {
-			log.Fatal(err)
-		}
-		return true, response
-	}
-	return false, ""
-
+	return true, response
 }
 
 func StoreURL(shortURL string, longURL string) {
