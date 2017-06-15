@@ -14,17 +14,21 @@ import (
 const alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const alphaLen = len(alpha)
 
+// ShortenURL Checks if a long url already exists and returns the associated url
+// otherwise, it will encode the long url then store it in Redis.
 func ShortenURL(url string) string {
 	// Check if URL already exists
 	exists, val := Exists(url)
 	if exists {
 		return val
 	}
+
 	redis, err := db.RedisPool.Get()
 	defer db.RedisPool.Put(redis)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// Grab unique ID
 	resp, err := redis.Cmd("INCR", "url.id").Int()
 	if err != nil {
@@ -36,14 +40,13 @@ func ShortenURL(url string) string {
 	return shortURL
 }
 
-// Exists checks if the URL already exists
-// If it does, just use the already shortened URL
+// Exists checks if the URL already exists. If it does, just use the already shortened URL
 func Exists(longURL string) (bool, string) {
-	// Grab connection from pool
 	urlObj, _ := url.Parse(longURL)
 	if !urlObj.IsAbs() {
 		longURL = "https://" + longURL
 	}
+
 	redis, err := db.RedisPool.Get()
 	defer db.RedisPool.Put(redis)
 
@@ -57,6 +60,8 @@ func Exists(longURL string) (bool, string) {
 	return true, response
 }
 
+// StoreURL store the long url and short url into Redis.
+// This runs in a transaction so both URL's are saved at the same time.
 func StoreURL(shortURL string, longURL string) {
 	// Check if the URL is absolute or not
 	url, _ := url.Parse(longURL)
@@ -70,15 +75,19 @@ func StoreURL(shortURL string, longURL string) {
 	}
 	defer db.RedisPool.Put(redis)
 
+	// Start transaction
 	if redis.Cmd("MULTI").Err != nil {
 		log.Fatal("Failed to create Transaction")
 	}
+	// Save short url
 	if redis.Cmd("SET", fmt.Sprintf("url:%s", shortURL), longURL).Err != nil {
 		log.Fatal("Failed to set short URL")
 	}
+	// Save long url
 	if redis.Cmd("SET", longURL, shortURL).Err != nil {
 		log.Fatal("Failed to set long URL")
 	}
+	// Commit transaction
 	if redis.Cmd("EXEC").Err != nil {
 		log.Fatal("Failed to exec Transaction")
 	}

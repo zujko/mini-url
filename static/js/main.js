@@ -23,6 +23,9 @@ $('table').on('mouseout', 'td', function() {
     $('.matching').removeClass('matching');
 });
 
+/**
+ * Makes an XMLHttpRequest to the server to shorten a URL.
+ */
 function shortenUrl() {
     var urldata = document.querySelector('#url-field').value;
     var xhr = new XMLHttpRequest();
@@ -42,6 +45,9 @@ function shortenUrl() {
     }
 }
 
+/**
+ * Toggles spinner
+ */
 function toggleSpinner() {
     var element = document.getElementById('spinner-main')
     if(element) {
@@ -54,6 +60,10 @@ function toggleSpinner() {
     }
 }
 
+/**
+ * Handle response from server and display data to user.
+ * @param {*} xhrReq 
+ */
 function getShortUrl(xhrReq) {
     console.log(xhrReq.responseText)
     var data = JSON.parse(xhrReq.responseText);
@@ -66,7 +76,7 @@ function getShortUrl(xhrReq) {
 
 /**
  * Displays URL data in a table
- * @param {*} data 
+ * @param {String} data 
  */
 function displayUrl(data) {
     // First make sure the table is visible
