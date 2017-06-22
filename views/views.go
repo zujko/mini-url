@@ -36,6 +36,10 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func HandleUrl(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	shortUrl := ps.ByName("shorturl")
 	fmt.Println("Handling URL", shortUrl)
+	if shortUrl == "favicon.ico" {
+		http.ServeFile(w, r, "static/favicon.ico")
+		return
+	}
 
 	// Get a redis connection
 	redis, err := db.RedisPool.Get()
