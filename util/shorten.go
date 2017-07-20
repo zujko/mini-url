@@ -2,13 +2,9 @@ package util
 
 import (
 	"bytes"
-	"fmt"
-	"log"
 	"math"
 	"net/url"
 	"strings"
-
-	"github.com/zujko/mini-url/db"
 )
 
 const alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -23,21 +19,21 @@ func ShortenURL(url string) string {
 		return val
 	}
 
-	redis, err := db.RedisPool.Get()
+	/*redis, err := db.RedisPool.Get()
 	defer db.RedisPool.Put(redis)
 	if err != nil {
 		log.Fatal(err)
-	}
+	}*/
 
 	// Grab unique ID
-	resp, err := redis.Cmd("INCR", "url.id").Int()
+	/*resp, err := redis.Cmd("INCR", "url.id").Int()
 	if err != nil {
 		log.Fatal(err)
 	}
-	shortURL := Encode(resp)
-	StoreURL(shortURL, url)
+	shortURL := Encode(resp)*/
+	//StoreURL(shortURL, url)
 
-	return shortURL
+	return "test"
 }
 
 // Exists checks if the URL already exists. If it does, just use the already shortened URL
@@ -47,17 +43,17 @@ func Exists(longURL string) (bool, string) {
 		longURL = "https://" + longURL
 	}
 
-	redis, err := db.RedisPool.Get()
-	defer db.RedisPool.Put(redis)
+	//redis, err := db.RedisPool.Get()
+	//defer db.RedisPool.Put(redis)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	response, err := redis.Cmd("GET", longURL).Str()
-	if err != nil {
-		return false, ""
-	}
-	return true, response
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//response, err := redis.Cmd("GET", longURL).Str()
+	//if err != nil {
+	//	return false, ""
+	//}
+	return true, "test"
 }
 
 // StoreURL store the long url and short url into Redis.
@@ -69,17 +65,17 @@ func StoreURL(shortURL string, longURL string) {
 		longURL = "https://" + longURL
 	}
 
-	redis, err := db.RedisPool.Get()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.RedisPool.Put(redis)
+	//redis, err := db.RedisPool.Get()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer db.RedisPool.Put(redis)
 
 	// Start transaction
-	if redis.Cmd("MULTI").Err != nil {
-		log.Fatal("Failed to create Transaction")
-	}
-	// Save short url
+	//if redis.Cmd("MULTI").Err != nil {
+	//	log.Fatal("Failed to create Transaction")
+	//}
+	/*// Save short url
 	if redis.Cmd("SET", fmt.Sprintf("url:%s", shortURL), longURL).Err != nil {
 		log.Fatal("Failed to set short URL")
 	}
@@ -90,7 +86,7 @@ func StoreURL(shortURL string, longURL string) {
 	// Commit transaction
 	if redis.Cmd("EXEC").Err != nil {
 		log.Fatal("Failed to exec Transaction")
-	}
+	}*/
 }
 
 // Encode encodes the URL's unique ID to Base62
@@ -123,3 +119,13 @@ func Decode(url string) int {
 	}
 	return result
 }
+
+/*
+// Create db connection
+	host = os.Getenv("DB_HOST")
+	port = os.Getenv("DB_PORT")
+	user = os.Getenv("DB_USER")
+	db = os.Getenv("DB_NAME")
+	sslmode = os.Getenv("DB_SSL")
+	psqlConn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s", host, port, user, db, sslmode)
+*/

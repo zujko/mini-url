@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/zujko/mini-url/db"
 	"github.com/zujko/mini-url/util"
 )
 
@@ -42,20 +40,20 @@ func HandleUrl(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	// Get a redis connection
-	redis, err := db.RedisPool.Get()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//redis, err := db.RedisPool.Get()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	// Grab the URL and check if it exists
-	resp, err := redis.Cmd("GET", fmt.Sprintf("url:%s", shortUrl)).Str()
-	db.RedisPool.Put(redis)
-	if err != nil {
-		fmt.Println("This URL does not exist")
-		return
-	}
+	//resp, err := redis.Cmd("GET", fmt.Sprintf("url:%s", shortUrl)).Str()
+	//db.RedisPool.Put(redis)
+	//if err != nil {
+	//	fmt.Println("This URL does not exist")
+	//	return
+	//}
 	fmt.Println("redirecting")
-	http.Redirect(w, r, resp, http.StatusMovedPermanently)
+	http.Redirect(w, r, "testurl", http.StatusMovedPermanently)
 }
 
 // Shorten Handles grabbing the long url from the client, checking if it is a valid URL
