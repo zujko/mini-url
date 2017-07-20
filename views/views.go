@@ -40,22 +40,13 @@ func HandleUrl(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		http.ServeFile(w, r, "static/favicon.ico")
 		return
 	}
-
-	// Get a redis connection
-	redis, err := db.RedisPool.Get()
+	var longURL string
+	err := db.DBConn.QueryRow("SELECT long_url FROM url WHERE short_url = $1", shortUrl).Scan(&longURL)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Grab the URL and check if it exists
-	resp, err := redis.Cmd("GET", fmt.Sprintf("url:%s", shortUrl)).Str()
-	db.RedisPool.Put(redis)
-	if err != nil {
-		fmt.Println("This URL does not exist")
-		return
+		log.Fatal("Failed to get longurl")
 	}
 	fmt.Println("redirecting")
-	http.Redirect(w, r, resp, http.StatusMovedPermanently)
+	http.Redirect(w, r, longURL, http.StatusMovedPermanently)
 }
 
 // Shorten Handles grabbing the long url from the client, checking if it is a valid URL

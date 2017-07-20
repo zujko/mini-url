@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"math"
 	"net/url"
@@ -15,27 +14,14 @@ const alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const alphaLen = len(alpha)
 
 // ShortenURL Checks if a long url already exists and returns the associated url
-// otherwise, it will encode the long url then store it in Redis.
+// otherwise, it will store the long url and return the short url.
 func ShortenURL(url string) string {
 	// Check if URL already exists
 	exists, val := Exists(url)
 	if exists {
 		return val
 	}
-
-	redis, err := db.RedisPool.Get()
-	defer db.RedisPool.Put(redis)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Grab unique ID
-	resp, err := redis.Cmd("INCR", "url.id").Int()
-	if err != nil {
-		log.Fatal(err)
-	}
-	shortURL := Encode(resp)
-	StoreURL(shortURL, url)
+	shortURL := StoreURL(url)
 
 	return shortURL
 }
@@ -46,51 +32,40 @@ func Exists(longURL string) (bool, string) {
 	if !urlObj.IsAbs() {
 		longURL = "https://" + longURL
 	}
-
-	redis, err := db.RedisPool.Get()
-	defer db.RedisPool.Put(redis)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	response, err := redis.Cmd("GET", longURL).Str()
+	var shortURL string
+	err := db.DBConn.QueryRow("SELECT short_url FROM url WHERE long_url = $1", longURL).Scan(&shortURL)
 	if err != nil {
 		return false, ""
 	}
-	return true, response
+	return true, shortURL
 }
 
-// StoreURL store the long url and short url into Redis.
-// This runs in a transaction so both URL's are saved at the same time.
-func StoreURL(shortURL string, longURL string) {
+// StoreURL store the long url and short url into postgres.
+func StoreURL(longURL string) string {
 	// Check if the URL is absolute or not
 	url, _ := url.Parse(longURL)
 	if !url.IsAbs() {
 		longURL = "https://" + longURL
 	}
 
-	redis, err := db.RedisPool.Get()
+	// Set short_url to an empty string because we need the id to encode
+	var id int
+	err := db.DBConn.QueryRow("INSERT INTO url(short_url,long_url) VALUES($1,$2) RETURNING url_id", "", longURL).Scan(&id)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.RedisPool.Put(redis)
-
-	// Start transaction
-	if redis.Cmd("MULTI").Err != nil {
-		log.Fatal("Failed to create Transaction")
+	shortURL := Encode(id)
+	// Update the row to set the short_url
+	result, err := db.DBConn.Exec("UPDATE url SET short_url = $1 WHERE url_id = $2", shortURL, id)
+	if err != nil {
+		log.Fatal(err)
 	}
-	// Save short url
-	if redis.Cmd("SET", fmt.Sprintf("url:%s", shortURL), longURL).Err != nil {
-		log.Fatal("Failed to set short URL")
+	// Check that the short_url was actually updated
+	_, err = result.RowsAffected()
+	if err != nil {
+		log.Fatal("Failed to update shorturl")
 	}
-	// Save long url
-	if redis.Cmd("SET", longURL, shortURL).Err != nil {
-		log.Fatal("Failed to set long URL")
-	}
-	// Commit transaction
-	if redis.Cmd("EXEC").Err != nil {
-		log.Fatal("Failed to exec Transaction")
-	}
+	return shortURL
 }
 
 // Encode encodes the URL's unique ID to Base62

@@ -1,7 +1,7 @@
 package db
 
-import radix "github.com/mediocregopher/radix.v2/pool"
+import "database/sql"
 
 var (
-	RedisPool *radix.Pool
+	DBConn *sql.DB
 )
