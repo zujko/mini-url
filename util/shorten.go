@@ -2,38 +2,28 @@ package util
 
 import (
 	"bytes"
+	"log"
 	"math"
 	"net/url"
 	"strings"
+
+	"github.com/zujko/mini-url/db"
 )
 
 const alpha = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const alphaLen = len(alpha)
 
 // ShortenURL Checks if a long url already exists and returns the associated url
-// otherwise, it will encode the long url then store it in Redis.
+// otherwise, it will store the long url and return the short url.
 func ShortenURL(url string) string {
 	// Check if URL already exists
 	exists, val := Exists(url)
 	if exists {
 		return val
 	}
+	shortURL := StoreURL(url)
 
-	/*redis, err := db.RedisPool.Get()
-	defer db.RedisPool.Put(redis)
-	if err != nil {
-		log.Fatal(err)
-	}*/
-
-	// Grab unique ID
-	/*resp, err := redis.Cmd("INCR", "url.id").Int()
-	if err != nil {
-		log.Fatal(err)
-	}
-	shortURL := Encode(resp)*/
-	//StoreURL(shortURL, url)
-
-	return "test"
+	return shortURL
 }
 
 // Exists checks if the URL already exists. If it does, just use the already shortened URL
@@ -42,51 +32,40 @@ func Exists(longURL string) (bool, string) {
 	if !urlObj.IsAbs() {
 		longURL = "https://" + longURL
 	}
-
-	//redis, err := db.RedisPool.Get()
-	//defer db.RedisPool.Put(redis)
-
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//response, err := redis.Cmd("GET", longURL).Str()
-	//if err != nil {
-	//	return false, ""
-	//}
-	return true, "test"
+	var shortURL string
+	err := db.DBConn.QueryRow("SELECT short_url FROM url WHERE long_url = $1", longURL).Scan(&shortURL)
+	if err != nil {
+		return false, ""
+	}
+	return true, shortURL
 }
 
-// StoreURL store the long url and short url into Redis.
-// This runs in a transaction so both URL's are saved at the same time.
-func StoreURL(shortURL string, longURL string) {
+// StoreURL store the long url and short url into postgres.
+func StoreURL(longURL string) string {
 	// Check if the URL is absolute or not
 	url, _ := url.Parse(longURL)
 	if !url.IsAbs() {
 		longURL = "https://" + longURL
 	}
 
-	//redis, err := db.RedisPool.Get()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//defer db.RedisPool.Put(redis)
-
-	// Start transaction
-	//if redis.Cmd("MULTI").Err != nil {
-	//	log.Fatal("Failed to create Transaction")
-	//}
-	/*// Save short url
-	if redis.Cmd("SET", fmt.Sprintf("url:%s", shortURL), longURL).Err != nil {
-		log.Fatal("Failed to set short URL")
+	// Set short_url to an empty string because we need the id to encode
+	var id int
+	err := db.DBConn.QueryRow("INSERT INTO url(short_url,long_url) VALUES($1,$2) RETURNING url_id", "", longURL).Scan(&id)
+	if err != nil {
+		log.Fatal(err)
 	}
-	// Save long url
-	if redis.Cmd("SET", longURL, shortURL).Err != nil {
-		log.Fatal("Failed to set long URL")
+	shortURL := Encode(id)
+	// Update the row to set the short_url
+	result, err := db.DBConn.Exec("UPDATE url SET short_url = $1 WHERE url_id = $2", shortURL, id)
+	if err != nil {
+		log.Fatal(err)
 	}
-	// Commit transaction
-	if redis.Cmd("EXEC").Err != nil {
-		log.Fatal("Failed to exec Transaction")
-	}*/
+	// Check that the short_url was actually updated
+	_, err = result.RowsAffected()
+	if err != nil {
+		log.Fatal("Failed to update shorturl")
+	}
+	return shortURL
 }
 
 // Encode encodes the URL's unique ID to Base62
@@ -119,13 +98,3 @@ func Decode(url string) int {
 	}
 	return result
 }
-
-/*
-// Create db connection
-	host = os.Getenv("DB_HOST")
-	port = os.Getenv("DB_PORT")
-	user = os.Getenv("DB_USER")
-	db = os.Getenv("DB_NAME")
-	sslmode = os.Getenv("DB_SSL")
-	psqlConn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s", host, port, user, db, sslmode)
-*/
