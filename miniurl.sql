@@ -1,6 +1,8 @@
 CREATE TABLE profile (
     profile_id serial PRIMARY KEY,
-    profile_name text NOT NULL
+    username text NOT NULL,
+    full_name text NOT NULL,
+    email text
 );
 
 CREATE TABLE url (

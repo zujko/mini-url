@@ -4,12 +4,20 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
 
+	"github.com/gorilla/context"
+	"github.com/gorilla/pat"
+	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
+	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/facebook"
+	"github.com/markbates/goth/providers/github"
+	"github.com/markbates/goth/providers/twitter"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/markbates/goth"
 	"github.com/zujko/mini-url/db"
 	"github.com/zujko/mini-url/views"
 )
@@ -21,6 +29,14 @@ var (
 	dbName  = os.Getenv("DB_NAME")
 	sslmode = os.Getenv("DB_SSL")
 )
+
+func init() {
+	store := sessions.NewFilesystemStore(os.TempDir(), []byte("goth-example"))
+
+	store.MaxLength(math.MaxInt64)
+
+	gothic.Store = store
+}
 
 func main() {
 	var err error
@@ -37,14 +53,21 @@ func main() {
 		log.Fatal("Could not ping DB")
 	}
 	defer db.DBConn.Close()
+	goth.UseProviders(
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), "http://localhost/auth/github/callback"),
+		twitter.New(os.Getenv("TWITTER_KEY"), os.Getenv("TWITTER_SECRET"), "http://localhost/auth/twitter/callback"),
+		facebook.New(os.Getenv("FACEBOOK_KEY"), os.Getenv("FACEBOOK_SECRET"), "http://localhost/auth/facebook/callback"),
+	)
 
 	// Create router
-	router := httprouter.New()
+	router := pat.New()
 	views.LoadTemplates()
-	router.GET("/", views.Index)
-	router.GET("/:shorturl", views.HandleUrl)
-	router.POST("/shorten", views.Shorten)
-	// This sidesteps the core rules of httprouter, but this is only for a dev env so eh
-	router.NotFound = http.FileServer(http.Dir("./static"))
-	log.Fatal(http.ListenAndServe(PORT, router))
+	router.Post("/shorten", views.Shorten)
+	router.Get("/static/", views.StaticHandler)
+	router.Get("/auth/{provider}/callback", views.AuthCallback)
+	router.Get("/auth/{provider}", views.Auth)
+	router.Get("/logout/{provider}", views.Logout)
+	router.Get("/{shorturl}", views.HandleUrl)
+	router.Get("/", views.Index)
+	log.Fatal(http.ListenAndServe(PORT, context.ClearHandler(router)))
 }

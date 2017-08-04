@@ -10,13 +10,61 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  <link href="css/styles.css" rel="stylesheet">
+  <link href="static/css/styles.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-  <script src="js/notify.min.js"></script>
+  <script src="static/js/notify.min.js"></script>
 </head>
 
 <body>
+ <nav class="navbar navbar-default navbar-inverse" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Mini URL</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-right">
+        {{if .Name}}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b>Hi {{.Name}}</b> <span class="caret"></span></a>
+			<ul id="login-dp" class="dropdown-menu">
+				<li>
+					 <div class="row">
+							<div class="col-md-12">
+								<div class="social-buttons">
+                  <a href="/auth/github" class="btn btn-gh"> <i class="fa fa-github"></i> Settings</a>
+								</div>
+							</div>
+					 </div>
+				</li>
+			</ul>
+        </li>
+        {{else}}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b>Login</b> <span class="caret"></span></a>
+			<ul id="login-dp" class="dropdown-menu">
+				<li>
+					 <div class="row">
+							<div class="col-md-12">
+								Login via
+								<div class="social-buttons">
+                  <a href="/auth/github" class="btn btn-gh"> <i class="fa fa-github"></i> Github</a>
+                  <a href="/auth/twitter" class="btn btn-tw"><i class="fa fa-twitter"></i> Twitter</a>
+									<a href="/auth/facebook" class="btn btn-fb"><i class="fa fa-facebook"></i> Facebook</a>
+								</div>
+							</div>
+					 </div>
+				</li>
+			</ul>
+        </li>
+        {{end}}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
   <div class="site-wrapper">
     <div class="site-wrapper-inner">
       <div class="main-container">
@@ -49,7 +97,7 @@
       </div>
     </div>
   </div>
-  <script src="js/main.js"></script>
+  <script src="static/js/main.js"></script>
 </body>
 
 </html>
